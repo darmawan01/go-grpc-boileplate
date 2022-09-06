@@ -1,0 +1,13 @@
+syntax = "proto3";
+package services;
+option go_package = "go_grpc_boileplate/services/hello";
+
+import "google/protobuf/empty.proto";
+
+service HelloServices {
+    rpc SayHello (google.protobuf.Empty) returns (HelloResponses);
+}
+
+message HelloResponses {
+    string value = 1;
+}
