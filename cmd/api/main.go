@@ -20,7 +20,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	hello.RegisterHelloServicesServer(s, &hello.Hello{})
+	hello.RegisterHelloServicesServer(s, &hello.HelloServices{})
 
 	log.Printf("server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {

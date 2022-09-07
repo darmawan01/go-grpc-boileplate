@@ -6,11 +6,11 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type Hello struct {
+type HelloServices struct {
 	UnimplementedHelloServicesServer
 }
 
-func (hello *Hello) SayHello(ctx context.Context, in *emptypb.Empty) (*HelloResponses, error) {
+func (hello *HelloServices) SayHello(ctx context.Context, in *emptypb.Empty) (*HelloResponses, error) {
 	return &HelloResponses{
 		Value: "Hi",
 	}, nil
