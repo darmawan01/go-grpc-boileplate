@@ -1,8 +1,21 @@
+# Go Microservices
 
+## CMD's
+`Note: Make sure you have 'make' command installed`
 
-# Preqruites:
+Run Project
+```
+make run
+```
 
-## GRPC
+Run Test
+```
+make test
+```
+
+## How to get started?
+
+Requirements:
 
 [GRPC Quick Start](https://grpc.io/docs/languages/go/quickstart/)
 
