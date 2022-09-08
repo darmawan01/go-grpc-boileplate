@@ -10,7 +10,13 @@ type HttpResponses struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
-	Meta    any    `json:"meta,omitempty"`
+	Meta    *Meta  `json:"meta,omitempty"`
+}
+
+type Meta struct {
+	Page      int `json:"page"`
+	TotalPage int `json:"total_page"`
+	TotalData int `json:"total_data"`
 }
 
 type responses struct {

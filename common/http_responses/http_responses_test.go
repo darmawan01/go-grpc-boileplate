@@ -37,6 +37,21 @@ func newServer() *http.ServeMux {
 		).Send()
 	}))
 
+	router.HandleFunc("/with-meta", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		New(w,
+			HttpResponses{
+				Status:  http.StatusOK,
+				Message: "success",
+				Data:    []string{"Hello", "World"},
+				Meta: &Meta{
+					Page:      1,
+					TotalPage: 1,
+					TotalData: 2,
+				},
+			},
+		).Send()
+	}))
+
 	return router
 }
 
@@ -62,6 +77,7 @@ func TestHttpResponses(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, resp.Status, "Should return 200")
 	require.Equal(t, "success", resp.Message, "Should return success")
+	require.Equal(t, (*Meta)(nil), resp.Meta, "Should return nil")
 
 	// Test on failed to marshal data
 	res, err = http.Get(svr.URL + "/forbidden")
@@ -77,4 +93,27 @@ func TestHttpResponses(t *testing.T) {
 
 	require.Equal(t, http.StatusForbidden, res.StatusCode, "Should return 403")
 	require.Equal(t, constant.MSG_FORBIDDEN_ACCESS, string(out), "Should return forbidden access")
+
+	// Test get meta
+	res, err = http.Get(svr.URL + "/with-meta")
+	if err != nil {
+		require.Equal(t, nil, err, "Should not error")
+	}
+
+	defer res.Body.Close()
+	out, err = io.ReadAll(res.Body)
+	if err != nil {
+		require.Equal(t, nil, err, "Should not error")
+	}
+
+	if err := json.Unmarshal(out, &resp); err != nil {
+		require.Equal(t, nil, err, "Should not error")
+	}
+
+	require.Equal(t, http.StatusOK, resp.Status, "Should return 200")
+	require.Equal(t, "success", resp.Message, "Should return success")
+	require.NotEqual(t, nil, resp.Meta, "Should not return nil")
+	require.Equal(t, 1, resp.Meta.Page, "Should return page 1")
+	require.Equal(t, 1, resp.Meta.TotalPage, "Should return total page 1")
+	require.Equal(t, 2, resp.Meta.TotalData, "Should return total data 2")
 }
