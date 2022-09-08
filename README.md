@@ -1,5 +1,10 @@
 # Go Microservices
 
+```
+> go verison
+go version go1.19 darwin/arm64
+```
+
 ## CMD's
 `Note: Make sure you have 'make' command installed`
 
