@@ -3,6 +3,7 @@ module go_grpc_boileplate
 go 1.19
 
 require (
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/stretchr/testify v1.8.0
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1

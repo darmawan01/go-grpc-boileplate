@@ -1,6 +1,6 @@
 syntax = "proto3";
 package services;
-option go_package = "go_grpc_boileplate/services/hello";
+option go_package = "go_grpc_boileplate/services/grpc/hello";
 
 import "google/protobuf/empty.proto";
 

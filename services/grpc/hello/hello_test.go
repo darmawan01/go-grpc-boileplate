@@ -18,7 +18,7 @@ func dialer() func(context.Context, string) (net.Conn, error) {
 
 	server := grpc.NewServer()
 
-	RegisterHelloServicesServer(server, &HelloServices{})
+	RegisterHelloServicesServer(server, &HelloGrpcServices{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {
