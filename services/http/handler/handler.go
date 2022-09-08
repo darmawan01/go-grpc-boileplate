@@ -3,6 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"go_grpc_boileplate/common/constant"
+	"go_grpc_boileplate/common/http_responses"
+
 	"github.com/go-chi/chi/v5"
 )
 
@@ -12,11 +15,16 @@ type HandlerServices struct {
 
 func (svc *HandlerServices) RegisterSvc() {
 	svc.Router.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(404)
-		w.Write([]byte("404 Route not found"))
+		http_responses.New(w, http_responses.HttpResponses{
+			Status:  http.StatusNotFound,
+			Message: constant.MSG_NOT_FOUND,
+		}).Send()
 	})
+
 	svc.Router.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(405)
-		w.Write([]byte("405 Method not allowed"))
+		http_responses.New(w, http_responses.HttpResponses{
+			Status:  http.StatusMethodNotAllowed,
+			Message: constant.MSG_NOT_FOUND,
+		}).Send()
 	})
 }
