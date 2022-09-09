@@ -1,10 +1,11 @@
 package hello
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"go_grpc_boileplate/common/test"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/require"
@@ -21,17 +22,8 @@ func TestSayHello(t *testing.T) {
 	svr := httptest.NewServer(r)
 	defer svr.Close()
 
-	res, err := http.Get(svr.URL)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
+	status, resp := test.TestRequest(t, svr, "GET", "/", nil, nil)
 
-	defer res.Body.Close()
-	out, err := io.ReadAll(res.Body)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
-
-	require.Equal(t, http.StatusOK, res.StatusCode, "Should return 200")
-	require.Equal(t, "Hi there...", string(out), "Should return Hi there...")
+	require.Equal(t, http.StatusOK, status, "Should return 200")
+	require.Equal(t, "Hi there...", string(resp), "Should return Hi there...")
 }

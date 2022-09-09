@@ -1,13 +1,13 @@
 package http_response
 
 import (
-	"io"
 	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"go_grpc_boileplate/common/constant"
+	"go_grpc_boileplate/common/test"
 
 	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/require"
@@ -60,19 +60,10 @@ func TestHttpResponse(t *testing.T) {
 	svr := httptest.NewServer(newServer())
 	defer svr.Close()
 
-	res, err := http.Get(svr.URL)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
-
-	defer res.Body.Close()
-	out, err := io.ReadAll(res.Body)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
+	i, s := test.TestRequest(t, svr, "GET", "/", nil, nil)
 
 	var resp HttpResponse
-	if err := sonic.Unmarshal(out, &resp); err != nil {
+	if err := sonic.Unmarshal([]byte(s), &resp); err != nil {
 		require.Equal(t, nil, err, "Should not error")
 	}
 
@@ -81,33 +72,15 @@ func TestHttpResponse(t *testing.T) {
 	require.Equal(t, (*Meta)(nil), resp.Meta, "Should return nil")
 
 	// Test on failed to marshal data
-	res, err = http.Get(svr.URL + "/forbidden")
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
+	i, s = test.TestRequest(t, svr, "GET", "/forbidden", nil, nil)
 
-	defer res.Body.Close()
-	out, err = io.ReadAll(res.Body)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
-
-	require.Equal(t, http.StatusForbidden, res.StatusCode, "Should return 403")
-	require.Equal(t, constant.MSG_FORBIDDEN_ACCESS, string(out), "Should return forbidden access")
+	require.Equal(t, http.StatusForbidden, i, "Should return 403")
+	require.Equal(t, constant.MSG_FORBIDDEN_ACCESS, s, "Should return forbidden access")
 
 	// Test get meta
-	res, err = http.Get(svr.URL + "/with-meta")
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
+	i, s = test.TestRequest(t, svr, "GET", "/with-meta", nil, nil)
 
-	defer res.Body.Close()
-	out, err = io.ReadAll(res.Body)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
-
-	if err := sonic.Unmarshal(out, &resp); err != nil {
+	if err := sonic.Unmarshal([]byte(s), &resp); err != nil {
 		require.Equal(t, nil, err, "Should not error")
 	}
 
