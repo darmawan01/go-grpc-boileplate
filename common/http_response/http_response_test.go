@@ -1,14 +1,15 @@
 package http_response
 
 import (
-	"encoding/json"
-	"go_grpc_boileplate/common/constant"
 	"io"
 	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"go_grpc_boileplate/common/constant"
+
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,7 +25,7 @@ func newServer() *http.ServeMux {
 	}))
 
 	router.HandleFunc("/forbidden", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var unsupportedValues = []any{
+		unsupportedValues := []any{
 			math.NaN(),
 		}
 
