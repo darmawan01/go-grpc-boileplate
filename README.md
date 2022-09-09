@@ -1,9 +1,10 @@
 # Go Microservices
 
-```
-> go verison
-go version go1.19 darwin/arm64
-```
+## Prerequisites
+
+- `go version go1.19` or higher
+- `build-esential`
+
 
 ## CMD's
 `Note: Make sure you have 'make' command installed`
@@ -41,3 +42,9 @@ protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
     services/grpc/hello/hello.proto
 ```
+
+## How to contribute
+
+No rules for now. Feel free to add issue first and optionally submit a PR. Cheers
+
+[Conventional Commits Reference](https://www.conventionalcommits.org/en/v1.0.0/#specification)

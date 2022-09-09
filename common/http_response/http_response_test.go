@@ -1,4 +1,4 @@
-package http_responses
+package http_response
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ func newServer() *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		New(w,
-			HttpResponses{
+			HttpResponse{
 				Status:  http.StatusOK,
 				Message: "success",
 			},
@@ -29,7 +29,7 @@ func newServer() *http.ServeMux {
 		}
 
 		New(w,
-			HttpResponses{
+			HttpResponse{
 				Status:  http.StatusOK,
 				Message: "success",
 				Data:    unsupportedValues,
@@ -39,7 +39,7 @@ func newServer() *http.ServeMux {
 
 	router.HandleFunc("/with-meta", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		New(w,
-			HttpResponses{
+			HttpResponse{
 				Status:  http.StatusOK,
 				Message: "success",
 				Data:    []string{"Hello", "World"},
@@ -55,7 +55,7 @@ func newServer() *http.ServeMux {
 	return router
 }
 
-func TestHttpResponses(t *testing.T) {
+func TestHttpResponse(t *testing.T) {
 	svr := httptest.NewServer(newServer())
 	defer svr.Close()
 
@@ -70,7 +70,7 @@ func TestHttpResponses(t *testing.T) {
 		require.Equal(t, nil, err, "Should not error")
 	}
 
-	var resp HttpResponses
+	var resp HttpResponse
 	if err := json.Unmarshal(out, &resp); err != nil {
 		require.Equal(t, nil, err, "Should not error")
 	}

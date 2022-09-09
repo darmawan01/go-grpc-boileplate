@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"go_grpc_boileplate/common/constant"
-	"go_grpc_boileplate/common/http_responses"
+	"go_grpc_boileplate/common/http_response"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -15,14 +15,14 @@ type HandlerServices struct {
 
 func (svc *HandlerServices) RegisterSvc() {
 	svc.Router.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		http_responses.New(w, http_responses.HttpResponses{
+		http_response.New(w, http_response.HttpResponse{
 			Status:  http.StatusNotFound,
 			Message: constant.MSG_NOT_FOUND,
 		}).Send()
 	})
 
 	svc.Router.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
-		http_responses.New(w, http_responses.HttpResponses{
+		http_response.New(w, http_response.HttpResponse{
 			Status:  http.StatusMethodNotAllowed,
 			Message: constant.MSG_NOT_FOUND,
 		}).Send()
