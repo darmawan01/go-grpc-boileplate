@@ -13,7 +13,7 @@ type Services struct {
 	DB     *gorm.DB
 }
 
-func (svc *Services) Resgiters() {
+func (svc *Services) Register() {
 	helloSvc := hello.HelloServices{
 		Router: svc.Router,
 		DB:     svc.DB,

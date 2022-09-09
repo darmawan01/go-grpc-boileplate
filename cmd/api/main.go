@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"go_grpc_boileplate/common/db"
-	"go_grpc_boileplate/configs"
-	"go_grpc_boileplate/services"
 	"log"
 	"net"
 	"net/http"
@@ -13,6 +10,10 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"go_grpc_boileplate/common/db"
+	"go_grpc_boileplate/configs"
+	"go_grpc_boileplate/services"
 
 	pb "go_grpc_boileplate/services/grpc/hello"
 
@@ -22,8 +23,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var dbConn *gorm.DB
-var conf *configs.Configs
+var (
+	dbConn *gorm.DB
+	conf   *configs.Configs
+)
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -47,7 +50,7 @@ func main() {
 	// Serve HTTP
 	httpServer := serveHttp()
 
-	//Serve GRPC
+	// Serve GRPC
 	go serveGRPC()
 
 	// Server run context
@@ -95,7 +98,7 @@ func serveHttp() *http.Server {
 
 	// Register services
 	service := services.Services{Router: r, DB: dbConn}
-	service.Resgiters()
+	service.Register()
 
 	return &http.Server{
 		Addr:    fmt.Sprintf(":%s", conf.Port),
