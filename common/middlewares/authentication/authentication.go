@@ -55,7 +55,7 @@ func Authentication(next http.Handler) http.HandlerFunc {
 
 		var userInfo authorization.UserInfo
 
-		err = sonic.Unmarshal(&userInfo)
+		err = sonic.Unmarshal(b, &userInfo)
 		if err != nil {
 			http_response.New(w, responseError).Send()
 			return
