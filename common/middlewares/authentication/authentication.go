@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 
 	"go_grpc_boileplate/common/constant"
 	"go_grpc_boileplate/common/http_response"
@@ -14,10 +13,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func Authentication() func(next http.Handler) http.Handler {
+func Authentication(secretKey string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			jwtKey := os.Getenv("JWT_SECRET")
 			authToken := r.Header.Get("Authorization")
 
 			responseError := http_response.HttpResponse{
@@ -36,7 +34,7 @@ func Authentication() func(next http.Handler) http.Handler {
 					return nil, fmt.Errorf("unexpected signing method :%v", token.Header["alg"])
 				}
 
-				return []byte(jwtKey), nil
+				return []byte(secretKey), nil
 			})
 			if err != nil {
 				http_response.New(w, responseError).Send()
