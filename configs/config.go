@@ -1,11 +1,16 @@
 package configs
 
 import (
-	"go_grpc_boileplate/common/constant"
+	"context"
 	"log"
 	"os"
 
+	"go_grpc_boileplate/common/constant"
+
+	"github.com/bytedance/sonic"
 	"github.com/joho/godotenv"
+
+	vault "github.com/hashicorp/vault/api"
 )
 
 type Configs struct {
@@ -61,8 +66,36 @@ func LoadFromEnv() *Configs {
 	}
 }
 
-func LoadFromVault() *Configs {
-	return &Configs{}
+func LoadFromVault(address, token string) *Configs {
+	config := vault.DefaultConfig()
+	config.Address = address
+
+	client, err := vault.NewClient(config)
+	if err != nil {
+		log.Fatalf("unable to initialize Vault client: %v", err)
+	}
+
+	client.SetToken(token)
+
+	ctx := context.Background()
+
+	secret, err := client.KVv2(os.Getenv("SERVICE_NAME")).Get(ctx, os.Getenv("SECRET_NAME"))
+	if err != nil {
+		log.Fatalf("unable to read secret: %v", err)
+	}
+
+	b, err := sonic.Marshal(secret.Data)
+	if err != nil {
+		log.Fatalf("unable to read secret: %v", err)
+	}
+
+	var configs Configs
+	err = sonic.Unmarshal(b, &configs)
+	if err != nil {
+		log.Fatalf("unable to read secret: %v", err)
+	}
+
+	return &configs
 }
 
 func (conf *Configs) IsDevelopment() bool {
