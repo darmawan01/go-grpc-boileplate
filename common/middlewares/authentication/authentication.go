@@ -8,7 +8,9 @@ import (
 
 	"go_grpc_boileplate/common/constant"
 	"go_grpc_boileplate/common/http_response"
+	"go_grpc_boileplate/common/middlewares/authorization"
 
+	"github.com/bytedance/sonic"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -45,7 +47,21 @@ func Authentication(next http.Handler) http.HandlerFunc {
 			http_response.New(w, responseError).Send()
 			return
 		}
-		ctx := context.WithValue(r.Context(), "userInfo", claims)
+		b, err := sonic.Marshal(claims)
+		if err != nil {
+			http_response.New(w, responseError).Send()
+			return
+		}
+
+		var userInfo authorization.UserInfo
+
+		err = sonic.Unmarshal(&userInfo)
+		if err != nil {
+			http_response.New(w, responseError).Send()
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "userInfo", userInfo)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
