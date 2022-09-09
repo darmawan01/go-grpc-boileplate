@@ -71,7 +71,7 @@ func TestHttpResponse(t *testing.T) {
 	}
 
 	var resp HttpResponse
-	if err := json.Unmarshal(out, &resp); err != nil {
+	if err := sonic.Unmarshal(out, &resp); err != nil {
 		require.Equal(t, nil, err, "Should not error")
 	}
 
@@ -106,7 +106,7 @@ func TestHttpResponse(t *testing.T) {
 		require.Equal(t, nil, err, "Should not error")
 	}
 
-	if err := json.Unmarshal(out, &resp); err != nil {
+	if err := sonic.Unmarshal(out, &resp); err != nil {
 		require.Equal(t, nil, err, "Should not error")
 	}
 
