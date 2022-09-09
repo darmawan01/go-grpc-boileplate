@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"gorm.io/gorm"
 )
 
 type HelloServices struct {
 	Router *chi.Mux
+	DB     *gorm.DB
 }
 
 func (svc *HelloServices) RegisterSvc() {

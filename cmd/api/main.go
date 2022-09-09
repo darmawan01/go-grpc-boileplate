@@ -2,41 +2,63 @@ package main
 
 import (
 	"context"
-	"go_grpc_boileplate/services/http/handler"
-	"go_grpc_boileplate/services/http/hello"
+	"fmt"
+	"go_grpc_boileplate/common/db"
+	"go_grpc_boileplate/configs"
+	"go_grpc_boileplate/services"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	pb "go_grpc_boileplate/services/grpc/hello"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
-func init() {
+var dbConn *gorm.DB
+var conf *configs.Configs
 
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	conf = configs.LoadFromEnv()
+
+	conn := &db.DBConn{
+		Info:       conf.DB,
+		SilentMode: conf.IsProduction(),
+	}
+
+	var err error
+	if dbConn, err = conn.Open(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
-	// The HTTP Server
-	server := &http.Server{
-		Addr:    ":3033",
-		Handler: registerServices(),
-	}
+	log.Println("Start server...")
+
+	// Serve HTTP
+	httpServer := serveHttp()
+
+	//Serve GRPC
+	go serveGRPC()
 
 	// Server run context
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
-
-	// Listen for syscall signals for process to interrupt/quit
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-sig
 
 		// Shutdown signal with grace period of 30 seconds
-		shutdownCtx, cancel := context.WithTimeout(serverCtx, 30*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(serverCtx, 5*time.Second)
 		defer cancel()
 
 		go func() {
@@ -47,15 +69,17 @@ func main() {
 		}()
 
 		// Trigger graceful shutdown
-		err := server.Shutdown(shutdownCtx)
-		if err != nil {
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
 			log.Fatal(err)
 		}
+
 		serverStopCtx()
+		// grpcServer.Stop()
 	}()
 
 	// Run the server
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	log.Printf("Server is running on port %s \n", conf.Port)
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
 
@@ -63,23 +87,32 @@ func main() {
 	<-serverCtx.Done()
 }
 
-func registerServices() http.Handler {
+func serveHttp() *http.Server {
 	r := chi.NewRouter()
 
 	// Middleware
 	r.Use(middleware.Logger)
 
 	// Register services
-	helloSvc := hello.HelloServices{
-		Router: r,
-	}
-	helloSvc.RegisterSvc()
+	service := services.Services{Router: r, DB: dbConn}
+	service.Resgiters()
 
-	handlerSvc := handler.HandlerServices{
-		Router: r,
+	return &http.Server{
+		Addr:    fmt.Sprintf(":%s", conf.Port),
+		Handler: r,
 	}
-	handlerSvc.RegisterSvc()
-	// End of registered services
+}
 
-	return r
+func serveGRPC() *grpc.Server {
+	grpcServer := grpc.NewServer()
+
+	pb.RegisterHelloServicesServer(grpcServer, &pb.HelloGrpcServices{})
+
+	listener, err := net.Listen("tcp", ":9002")
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcServer.Serve(listener)
+
+	return grpcServer
 }
