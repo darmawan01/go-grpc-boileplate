@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go_grpc_boileplate/common/test"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/stretchr/testify/require"
@@ -32,20 +34,14 @@ func TestHandler(t *testing.T) {
 	svr := httptest.NewServer(newServer())
 	defer svr.Close()
 
-	res, err := http.Get(svr.URL + "/opapa")
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
-	defer res.Body.Close()
+	statusCode, _ := test.TestRequest(t, svr, "GET", "/opapa", nil, nil)
 
-	require.Equal(t, http.StatusNotFound, res.StatusCode, "Should return 404")
+	require.Equal(t, http.StatusNotFound, statusCode, "Should return 404")
 
 	// Test not allowed method
-	res, err = http.Post(svr.URL, "application/json", nil)
-	if err != nil {
-		require.Equal(t, nil, err, "Should not error")
-	}
-	defer res.Body.Close()
+	h := http.Header{}
+	h.Add("Content-Type", "application/json")
+	statusCode, _ = test.TestRequest(t, svr, "POST", "/", h, nil)
 
-	require.Equal(t, http.StatusMethodNotAllowed, res.StatusCode, "Should return 405")
+	require.Equal(t, http.StatusMethodNotAllowed, statusCode, "Should return 405")
 }

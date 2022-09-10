@@ -1,9 +1,11 @@
 package http_response
 
 import (
-	"encoding/json"
-	"go_grpc_boileplate/common/constant"
 	"net/http"
+
+	"go_grpc_boileplate/common/constant"
+
+	"github.com/bytedance/sonic"
 )
 
 type HttpResponse struct {
@@ -32,9 +34,9 @@ func New(writer http.ResponseWriter, res HttpResponse) *response {
 }
 
 func (h *response) Send() {
-	h.writer.Header().Set("Content-Type", "application/json")
+	h.writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	res, err := json.Marshal(h.response)
+	res, err := sonic.Marshal(h.response)
 	if err != nil {
 		h.writer.WriteHeader(http.StatusForbidden)
 		h.writer.Write([]byte(constant.MSG_FORBIDDEN_ACCESS))
