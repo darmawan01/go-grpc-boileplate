@@ -11,12 +11,17 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Open() (db *gorm.DB, err error) {
+type DBConn struct {
+	Info       configs.ConnInfo
+	SilentMode bool
+}
+
+func (conn *DBConn) Open() (db *gorm.DB, err error) {
 	db, err = gorm.Open(
 		postgres.New(postgres.Config{
 			DSN: fmt.Sprintf(
 				"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-				configs.Config.DB.User, configs.Config.DB.Pass, configs.Config.DB.Name, configs.Config.DB.Host, configs.Config.DB.Port,
+				conn.Info.User, conn.Info.Pass, conn.Info.Name, conn.Info.Host, conn.Info.Port,
 			),
 			PreferSimpleProtocol: true,
 		}),
@@ -27,7 +32,7 @@ func Open() (db *gorm.DB, err error) {
 		return
 	}
 
-	if !configs.Config.IsProduction() {
+	if !conn.SilentMode {
 		db.Logger = db.Logger.LogMode(logger.Info)
 	} else {
 		db.Logger = db.Logger.LogMode(logger.Silent)
@@ -36,9 +41,9 @@ func Open() (db *gorm.DB, err error) {
 	if err != nil {
 		return
 	}
-	dbGorm.SetMaxOpenConns(configs.Config.DB.MaxOpenConn)
-	dbGorm.SetMaxIdleConns(configs.Config.DB.MaxIdleConn)
-	dbGorm.SetConnMaxLifetime(time.Duration(configs.Config.DB.MaxLifeTime) * time.Minute)
+	dbGorm.SetMaxOpenConns(conn.Info.MaxOpenConn)
+	dbGorm.SetMaxIdleConns(conn.Info.MaxIdleConn)
+	dbGorm.SetConnMaxLifetime(time.Duration(conn.Info.MaxLifeTime) * time.Minute)
 
 	return
 }

@@ -30,22 +30,12 @@ func Authentication() func(next http.Handler) http.Handler {
 				return
 			}
 
-			// if config load from godotenv
-			secretKey := configs.Config.JWT.SecretKey
-
-			/*
-				// if config load from vault
-				configs.Mutex.RLock()
-				secretKey := configs.Config.JWT.SecretKey
-				configs.Mutex.RUnlock()
-			*/
-
 			token, err := jwt.Parse(authToken, func(token *jwt.Token) (any, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signing method :%v", token.Header["alg"])
 				}
 
-				return []byte(secretKey), nil
+				return []byte(configs.Config.JWT.SecretKey), nil
 			})
 			if err != nil {
 				http_response.New(w, responseError).Send()

@@ -4,11 +4,10 @@ import (
 	"context"
 	"log"
 	"os"
-	"strconv"
 	"strings"
-	"sync"
 
 	"go_grpc_boileplate/common/constant"
+	"go_grpc_boileplate/common/util"
 
 	"github.com/bytedance/sonic"
 	"github.com/joho/godotenv"
@@ -24,7 +23,7 @@ type Configs struct {
 	// Redus connection info
 	Redis ConnInfo `json:"redis"`
 	// JWT
-	JWT JWT `json:"jwt"`
+	JWT `json:"jwt"`
 }
 
 type ConnInfo struct {
@@ -44,57 +43,89 @@ type JWT struct {
 	SecretKey string `json:"secret_key"`
 }
 
-var (
-	Config Configs
-	Mutex  sync.RWMutex
-)
+type Vault struct {
+	Address     string `json:"-"`
+	Token       string `json:"-"`
+	ServiceName string `json:"-"`
+	SecretName  string `json:"-"`
+}
 
-// Load configs from env
-func LoadFromEnv() {
+var Config Configs
+
+func (conf Configs) IsDevelopment() bool {
+	return strings.ToLower(conf.Env) == "development"
+}
+
+func (conf Configs) IsStaging() bool {
+	return strings.ToLower(conf.Env) == "staging"
+}
+
+func (conf Configs) IsProduction() bool {
+	return strings.ToLower(conf.Env) == "production"
+}
+
+// Load configs from env or vault
+func LoadConfigs() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
+	isConfigFromVault := util.DefaultValueBool(false, os.Getenv(constant.USE_VAULT_CONFIG))
+
+	if isConfigFromVault {
+		vaultConfig = Vault{
+			Address:     os.Getenv(constant.VAULT_ADDRESS),
+			Token:       os.Getenv(constant.VAULT_TOKEN),
+			ServiceName: os.Getenv(constant.SERVICE_NAME),
+			SecretName:  os.Getenv(constant.SECRET_NAME),
+		}
+
+		vaultConfig.load()
+		return
+	}
+
 	Config = Configs{
-		Env:  envDefaultValueString("development", os.Getenv(constant.ENV)),
-		Port: envDefaultValueString("8080", os.Getenv(constant.PORT)),
+		Env:  util.DefaultValueString("development", os.Getenv(constant.ENV)),
+		Port: util.DefaultValueString("8080", os.Getenv(constant.PORT)),
 		DB: ConnInfo{
-			Host:        envDefaultValueString("localhost", os.Getenv(constant.DB_HOST)),
-			Port:        envDefaultValueString("5432", os.Getenv(constant.DB_PORT)),
-			User:        envDefaultValueString("postgres", os.Getenv(constant.DB_USER)),
-			Pass:        envDefaultValueString("secret", os.Getenv(constant.DB_PASS)),
-			Name:        envDefaultValueString("postgres", os.Getenv(constant.DB_NAME)),
-			MaxOpenConn: envDefaultValueInt(100, os.Getenv(constant.DB_MAX_OPEN_CONN)),
-			MaxIdleConn: envDefaultValueInt(5, os.Getenv(constant.DB_MAX_IDLE_CONN)),
-			MaxLifeTime: envDefaultValueInt(15, os.Getenv(constant.DB_MAX_LIFE_TIME)),
+			Host:        util.DefaultValueString("localhost", os.Getenv(constant.DB_HOST)),
+			Port:        util.DefaultValueString("5432", os.Getenv(constant.DB_PORT)),
+			User:        util.DefaultValueString("postgres", os.Getenv(constant.DB_USER)),
+			Pass:        util.DefaultValueString("secret", os.Getenv(constant.DB_PASS)),
+			Name:        util.DefaultValueString("postgres", os.Getenv(constant.DB_NAME)),
+			MaxOpenConn: util.DefaultValueInt(100, os.Getenv(constant.DB_MAX_OPEN_CONN)),
+			MaxIdleConn: util.DefaultValueInt(5, os.Getenv(constant.DB_MAX_IDLE_CONN)),
+			MaxLifeTime: util.DefaultValueInt(15, os.Getenv(constant.DB_MAX_LIFE_TIME)),
 		},
 		Redis: ConnInfo{
-			Host: envDefaultValueString("localhost", os.Getenv(constant.REDIS_HOST)),
-			Port: envDefaultValueString("6379", os.Getenv(constant.REDIS_PORT)),
-			User: envDefaultValueString("admin", os.Getenv(constant.REDIS_USER)),
-			Pass: envDefaultValueString("secret", os.Getenv(constant.REDIS_PASS)),
+			Host: util.DefaultValueString("localhost", os.Getenv(constant.REDIS_HOST)),
+			Port: util.DefaultValueString("6379", os.Getenv(constant.REDIS_PORT)),
+			User: util.DefaultValueString("admin", os.Getenv(constant.REDIS_USER)),
+			Pass: util.DefaultValueString("secret", os.Getenv(constant.REDIS_PASS)),
 		},
 		JWT: JWT{
-			SecretKey: envDefaultValueString("secretJwtKey", os.Getenv(constant.JWT_SECRET_KEY)),
+			SecretKey: util.DefaultValueString("secretJwtKey", os.Getenv(constant.JWT_SECRET_KEY)),
 		},
 	}
 }
 
-func LoadFromVault(address, token string) {
+var vaultConfig Vault
+
+func (vc Vault) load() {
 	config := vault.DefaultConfig()
-	config.Address = address
+	config.Address = vc.Address
 
 	client, err := vault.NewClient(config)
 	if err != nil {
 		log.Fatalf("unable to initialize Vault client: %v", err)
 	}
 
-	client.SetToken(token)
+	client.SetToken(vc.Token)
 
 	ctx := context.Background()
 
-	secret, err := client.KVv2(os.Getenv("SERVICE_NAME")).Get(ctx, os.Getenv("SECRET_NAME"))
+	secret, err := client.KVv2(vc.ServiceName).Get(ctx, vc.SecretName)
 	if err != nil {
 		log.Fatalf("unable to read secret: %v", err)
 	}
@@ -110,40 +141,5 @@ func LoadFromVault(address, token string) {
 		log.Fatalf("unable to read secret: %v", err)
 	}
 
-	// remove mutex if you don't load the config anymore
-	Mutex.Lock()
 	Config = temp
-	Mutex.Unlock()
-}
-
-func (conf Configs) IsDevelopment() bool {
-	return strings.ToLower(conf.Env) == "development"
-}
-
-func (conf Configs) IsStaging() bool {
-	return strings.ToLower(conf.Env) == "staging"
-}
-
-func (conf Configs) IsProduction() bool {
-	return strings.ToLower(conf.Env) == "production"
-}
-
-func envDefaultValueString(defaultValue, data string) string {
-	if data == "" {
-		return defaultValue
-	}
-	return data
-}
-
-func envDefaultValueInt(defaultValue int, data string) int {
-	if data == "" {
-		return defaultValue
-	}
-
-	dataInt, err := strconv.Atoi(data)
-	if err != nil {
-		return defaultValue
-	}
-
-	return dataInt
 }

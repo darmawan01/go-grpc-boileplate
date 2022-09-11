@@ -31,42 +31,20 @@ var (
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	configs.LoadFromEnv()
+	configs.LoadConfigs()
+
+	conn := &db.DBConn{
+		Info:       configs.Config.DB,
+		SilentMode: configs.Config.IsProduction(),
+	}
 
 	var err error
-	if dbConn, err = db.Open(); err != nil {
+	if dbConn, err = conn.Open(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func main() {
-	/*
-		serverCtx, serverStopCtx := context.WithCancel(context.Background())
-		defer serverStopCtx()
-		// load config from vault and auto reload
-		vaultAddress := os.Getenv("VAULT_ADDRESS")
-		vaultToken := os.Getenv("VAULT_TOKEN")
-		configs.LoadFromVault(vaultAddress, vaultToken)
-		var err error
-		if dbConn, err = db.Open(); err != nil {
-			log.Fatal(err)
-		}
-
-		// TODO: maybe we can use endpoint to trigger this and load all services like dbConn or redisConn, but dbConn or redisConn must public var on their pkg
-		go func() {
-			t := time.NewTicker(5 * time.Minute)
-			defer t.Stop()
-			for {
-				select {
-				case <-serverCtx.Done():
-					return
-				case <-t.C:
-					configs.LoadFromVault(vaultAddress, vaultToken)
-				}
-			}
-		}()
-	*/
-
 	log.Println("Start server...")
 
 	// Serve HTTP
