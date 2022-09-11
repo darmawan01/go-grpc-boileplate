@@ -1,5 +1,8 @@
 # Go Microservices
 
+# Example architecture
+![Architecture](https://github.com/darmawan01/assets/blob/main/integration.png)
+
 ## How to get started?
 
 Prerequisites
