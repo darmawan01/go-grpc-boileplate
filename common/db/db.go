@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"go_grpc_boileplate/configs"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type DBConn struct {
-	Info       *configs.ConnInfo
+	Info       configs.ConnInfo
 	SilentMode bool
 }
 
@@ -36,6 +37,13 @@ func (conn *DBConn) Open() (db *gorm.DB, err error) {
 	} else {
 		db.Logger = db.Logger.LogMode(logger.Silent)
 	}
+	dbGorm, err := db.DB()
+	if err != nil {
+		return
+	}
+	dbGorm.SetMaxOpenConns(conn.Info.MaxOpenConn)
+	dbGorm.SetMaxIdleConns(conn.Info.MaxIdleConn)
+	dbGorm.SetConnMaxLifetime(time.Duration(conn.Info.MaxLifeTime) * time.Minute)
 
 	return
 }

@@ -8,12 +8,13 @@ import (
 	"go_grpc_boileplate/common/constant"
 	"go_grpc_boileplate/common/http_response"
 	"go_grpc_boileplate/common/middlewares/authorization"
+	"go_grpc_boileplate/configs"
 
 	"github.com/bytedance/sonic"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func Authentication(secretKey string) func(next http.Handler) http.Handler {
+func Authentication() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authToken := r.Header.Get("Authorization")
@@ -34,7 +35,7 @@ func Authentication(secretKey string) func(next http.Handler) http.Handler {
 					return nil, fmt.Errorf("unexpected signing method :%v", token.Header["alg"])
 				}
 
-				return []byte(secretKey), nil
+				return []byte(configs.Config.JWT.SecretKey), nil
 			})
 			if err != nil {
 				http_response.New(w, responseError).Send()

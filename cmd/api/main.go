@@ -24,18 +24,18 @@ import (
 )
 
 var (
-	dbConn *gorm.DB
-	conf   *configs.Configs
+	dbConn     *gorm.DB
+	grpcServer *grpc.Server
 )
 
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	conf = configs.LoadFromEnv()
+	configs.LoadConfigs()
 
 	conn := &db.DBConn{
-		Info:       conf.DB,
-		SilentMode: conf.IsProduction(),
+		Info:       configs.Config.DB,
+		SilentMode: configs.Config.IsProduction(),
 	}
 
 	var err error
@@ -54,60 +54,55 @@ func main() {
 	go serveGRPC()
 
 	// Server run context
-	serverCtx, serverStopCtx := context.WithCancel(context.Background())
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
-		<-sig
-
-		// Shutdown signal with grace period of 30 seconds
-		shutdownCtx, cancel := context.WithTimeout(serverCtx, 5*time.Second)
-		defer cancel()
-
-		go func() {
-			<-shutdownCtx.Done()
-			if shutdownCtx.Err() == context.DeadlineExceeded {
-				log.Fatal("graceful shutdown timed out.. forcing exit.")
-			}
-		}()
-
-		// Trigger graceful shutdown
-		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		// Run the server
+		log.Printf("Server is running on port %s \n", configs.Config.Port)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
-
-		serverStopCtx()
-		// grpcServer.Stop()
 	}()
 
-	// Run the server
-	log.Printf("Server is running on port %s \n", conf.Port)
-	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	// Wait for signal close
+	<-sig
+
+	// serverStopCtx()
+	fmt.Println()
+	log.Println("closing grpc server")
+	grpcServer.GracefulStop()
+
+	// Shutdown signal with grace period of 30 seconds
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Trigger graceful shutdown
+	log.Println("closing http server")
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Fatal(err)
 	}
-
-	// Wait for server context to be stopped
-	<-serverCtx.Done()
 }
 
 func serveHttp() *http.Server {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.Logger)
+	if !configs.Config.IsProduction() {
+		r.Use(middleware.Logger)
+	}
 
 	// Register services
 	service := services.Services{Router: r, DB: dbConn}
 	service.Register()
 
 	return &http.Server{
-		Addr:    fmt.Sprintf(":%s", conf.Port),
+		Addr:    fmt.Sprintf(":%s", configs.Config.Port),
 		Handler: r,
 	}
 }
 
-func serveGRPC() *grpc.Server {
-	grpcServer := grpc.NewServer()
+func serveGRPC() {
+	grpcServer = grpc.NewServer()
 
 	pb.RegisterHelloServicesServer(grpcServer, &pb.HelloGrpcServices{})
 
@@ -116,6 +111,4 @@ func serveGRPC() *grpc.Server {
 		log.Fatal(err)
 	}
 	grpcServer.Serve(listener)
-
-	return grpcServer
 }
