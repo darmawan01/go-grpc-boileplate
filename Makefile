@@ -31,9 +31,10 @@ build-image:
 		-t go-grpc-boilerplate:v1 .
 
 run-image:
-	@docker run --rm \
-		--name go-grpc-boilerplate-test \
-		--env-file .env -p 8080:8080 \
-		docker.io/library/go-grpc-boilerplate:v1
+	@docker run --rm\
+		--name go-grpc-boilerplate-test\
+		--env-file .env\
+		-p 8080:8080\
+			docker.io/library/go-grpc-boilerplate:v1
 	
 
