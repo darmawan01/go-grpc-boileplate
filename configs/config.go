@@ -17,31 +17,31 @@ import (
 )
 
 type Configs struct {
-	Env  string
-	Port string
+	Env  string `json:"env"`
+	Port string `json:"port"`
 	// Database connection info
-	DB ConnInfo
+	DB ConnInfo `json:"db"`
 	// Redus connection info
-	Redis ConnInfo
+	Redis ConnInfo `json:"redis"`
 	// JWT
-	JWT JWT
+	JWT JWT `json:"jwt"`
 }
 
 type ConnInfo struct {
-	Host string
-	Port string
-	User string
-	Pass string
+	Host string `json:"host"`
+	Port string `json:"port"`
+	User string `json:"user"`
+	Pass string `json:"pass"`
 	// Eg: Database name
-	Name string
+	Name string `json:"name"`
 
-	MaxOpenConn int
-	MaxIdleConn int
-	MaxLifeTime int // will convert to minutes
+	MaxOpenConn int `json:"max_open_conn"`
+	MaxIdleConn int `json:"max_idle_conn"`
+	MaxLifeTime int `json:"max_life_time"` // will convert to minutes
 }
 
 type JWT struct {
-	SecretKey string
+	SecretKey string `json:"secret_key"`
 }
 
 var (
