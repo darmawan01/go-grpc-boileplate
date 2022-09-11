@@ -8,6 +8,7 @@ import (
 	"go_grpc_boileplate/common/constant"
 	"go_grpc_boileplate/common/http_response"
 	"go_grpc_boileplate/common/test"
+	"go_grpc_boileplate/configs"
 
 	"github.com/bytedance/sonic"
 	"github.com/go-chi/chi/v5"
@@ -17,6 +18,7 @@ import (
 func TestAuthentication(t *testing.T) {
 	r := chi.NewRouter()
 	key := "secretKey"
+	configs.Config.JWT.SecretKey = key
 	responseError := http_response.HttpResponse{
 		Status:  http.StatusForbidden,
 		Message: constant.MSG_FORBIDDEN_ACCESS,
@@ -28,7 +30,7 @@ func TestAuthentication(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r.Use(Authentication(key))
+	r.Use(Authentication())
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("welcome"))
 	})

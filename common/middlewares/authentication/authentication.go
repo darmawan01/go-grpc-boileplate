@@ -8,12 +8,13 @@ import (
 	"go_grpc_boileplate/common/constant"
 	"go_grpc_boileplate/common/http_response"
 	"go_grpc_boileplate/common/middlewares/authorization"
+	"go_grpc_boileplate/configs"
 
 	"github.com/bytedance/sonic"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func Authentication(secretKey string) func(next http.Handler) http.Handler {
+func Authentication() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authToken := r.Header.Get("Authorization")
@@ -28,6 +29,16 @@ func Authentication(secretKey string) func(next http.Handler) http.Handler {
 				http_response.New(w, responseError).Send()
 				return
 			}
+
+			// if config load from godotenv
+			secretKey := configs.Config.JWT.SecretKey
+
+			/*
+				// if config load from vault
+				configs.Mutex.RLock()
+				secretKey := configs.Config.JWT.SecretKey
+				configs.Mutex.RUnlock()
+			*/
 
 			token, err := jwt.Parse(authToken, func(token *jwt.Token) (any, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

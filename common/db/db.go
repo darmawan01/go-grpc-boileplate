@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"time"
 
 	"go_grpc_boileplate/configs"
 
@@ -10,17 +11,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type DBConn struct {
-	Info       *configs.ConnInfo
-	SilentMode bool
-}
-
-func (conn *DBConn) Open() (db *gorm.DB, err error) {
+func Open() (db *gorm.DB, err error) {
 	db, err = gorm.Open(
 		postgres.New(postgres.Config{
 			DSN: fmt.Sprintf(
 				"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-				conn.Info.User, conn.Info.Pass, conn.Info.Name, conn.Info.Host, conn.Info.Port,
+				configs.Config.DB.User, configs.Config.DB.Pass, configs.Config.DB.Name, configs.Config.DB.Host, configs.Config.DB.Port,
 			),
 			PreferSimpleProtocol: true,
 		}),
@@ -31,11 +27,18 @@ func (conn *DBConn) Open() (db *gorm.DB, err error) {
 		return
 	}
 
-	if !conn.SilentMode {
+	if !configs.Config.IsProduction() {
 		db.Logger = db.Logger.LogMode(logger.Info)
 	} else {
 		db.Logger = db.Logger.LogMode(logger.Silent)
 	}
+	dbGorm, err := db.DB()
+	if err != nil {
+		return
+	}
+	dbGorm.SetMaxOpenConns(configs.Config.DB.MaxOpenConn)
+	dbGorm.SetMaxIdleConns(configs.Config.DB.MaxIdleConn)
+	dbGorm.SetConnMaxLifetime(time.Duration(configs.Config.DB.MaxLifeTime) * time.Minute)
 
 	return
 }
