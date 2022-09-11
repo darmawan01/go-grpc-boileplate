@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"go_grpc_boileplate/common/constant"
 	"go_grpc_boileplate/common/http_response"
@@ -57,6 +58,17 @@ func TestAuthentication(t *testing.T) {
 
 	// sending wrong jwt token
 	h.Set("Authorization", "asdf")
+	if status, resp := test.TestRequest(t, ts, "GET", "/", h, nil); status != http.StatusForbidden || resp != string(b) {
+		t.Fatalf(resp)
+	}
+
+	// sending expired token
+	jwtToken = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"exp": time.Now().Add(-30 * time.Second).Unix()})
+	token, err = jwtToken.SignedString([]byte(key))
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.Set("Authorization", token)
 	if status, resp := test.TestRequest(t, ts, "GET", "/", h, nil); status != http.StatusForbidden || resp != string(b) {
 		t.Fatalf(resp)
 	}
