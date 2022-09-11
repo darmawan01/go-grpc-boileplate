@@ -42,6 +42,25 @@ Run Test
 make test
 ```
 
+Build executable binary
+```
+make build
+```
+
+Build docker image version
+```
+make build-image
+```
+
+Run docker image version
+```
+make run-image
+```
+```
+Notes: 
+When running, this app will looking for .env if not found it will take host variable instead
+```
+
 ## How to contribute
 
 No rules for now. Feel free to add issue first and optionally submit a PR. Cheers
