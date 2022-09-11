@@ -67,9 +67,8 @@ func main() {
 	// Wait for signal close
 	<-sig
 
-	// serverStopCtx()
 	fmt.Println()
-	log.Println("closing grpc server")
+	log.Println("Closing grpc server")
 	grpcServer.GracefulStop()
 
 	// Shutdown signal with grace period of 30 seconds
@@ -77,7 +76,7 @@ func main() {
 	defer cancel()
 
 	// Trigger graceful shutdown
-	log.Println("closing http server")
+	log.Println("Closing http server")
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Fatal(err)
 	}

@@ -21,7 +21,11 @@ func (conn *DBConn) Open() (db *gorm.DB, err error) {
 		postgres.New(postgres.Config{
 			DSN: fmt.Sprintf(
 				"user=%s password=%s dbname=%s host=%s port=%s sslmode=disable",
-				conn.Info.User, conn.Info.Pass, conn.Info.Name, conn.Info.Host, conn.Info.Port,
+				conn.Info.User,
+				conn.Info.Pass,
+				conn.Info.Name,
+				conn.Info.Host,
+				conn.Info.Port,
 			),
 			PreferSimpleProtocol: true,
 		}),
@@ -37,6 +41,7 @@ func (conn *DBConn) Open() (db *gorm.DB, err error) {
 	} else {
 		db.Logger = db.Logger.LogMode(logger.Silent)
 	}
+
 	dbGorm, err := db.DB()
 	if err != nil {
 		return
