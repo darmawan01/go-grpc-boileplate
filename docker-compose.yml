@@ -30,3 +30,13 @@ services:
       - 9090:8080
     networks:
       - infra
+
+  api:
+    container_name: infra_api
+    image: docker.io/library/go-grpc-boilerplate:v1
+    env_file:
+      - ./.env
+    ports:
+      - 8080:8080
+    networks:
+      - infra
