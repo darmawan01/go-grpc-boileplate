@@ -62,14 +62,14 @@ func LoadConfigs() {
 		log.Println("No .env file found, will take host variable instead")
 	}
 
-	isConfigFromVault := util.DefaultValueBool(false, os.Getenv(constant.USE_VAULT_CONFIG))
+	isConfigFromVault := util.DefaultValueBool(false, os.Getenv(constant.VAULT_ENABLED))
 
 	if isConfigFromVault {
 		vaultConfig = Vault{
 			Address:     os.Getenv(constant.VAULT_ADDRESS),
 			Token:       os.Getenv(constant.VAULT_TOKEN),
-			ServiceName: os.Getenv(constant.SERVICE_NAME),
-			SecretName:  os.Getenv(constant.SECRET_NAME),
+			ServiceName: os.Getenv(constant.VAULT_SERVICE_NAME),
+			SecretName:  os.Getenv(constant.VAULT_SECRET_NAME),
 		}
 
 		vaultConfig.load()
