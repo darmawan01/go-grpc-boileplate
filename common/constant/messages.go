@@ -8,8 +8,9 @@ const (
 
 // Env Keys
 const (
-	ENV  = "ENV"
-	PORT = "PORT"
+	ENV       = "ENV"
+	APP_PORT  = "APP_PORT"
+	GRPC_PORT = "GRPC_PORT"
 
 	DB_HOST          = "DB_HOST"
 	DB_PORT          = "DB_PORT"
