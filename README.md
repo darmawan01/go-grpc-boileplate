@@ -68,7 +68,7 @@ Other than that, you also can get the configs from vault. See the environment va
 Required:
 - `ENV` App Environment, Eg: development, staging, production
 - `APP_PORT` App port
-- `GRPC_PORT` App port
+- `GRPC_PORT` GRPC port
 - `DB_HOST` Db Host
 - `DB_PORT` Db port
 - `DB_USER` Db user
