@@ -58,7 +58,7 @@ func main() {
 	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		// Run the server
-		log.Printf("Server is running on port %s \n", configs.Config.Port)
+		log.Printf("Server is running on port %s \n", configs.Config.AppPort)
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
@@ -95,7 +95,7 @@ func serveHttp() *http.Server {
 	service.Register()
 
 	return &http.Server{
-		Addr:    fmt.Sprintf(":%s", configs.Config.Port),
+		Addr:    fmt.Sprintf(":%s", configs.Config.AppPort),
 		Handler: r,
 	}
 }
@@ -105,7 +105,8 @@ func serveGRPC() {
 
 	pb.RegisterHelloServicesServer(grpcServer, &pb.HelloGrpcServices{})
 
-	listener, err := net.Listen("tcp", ":9002")
+	log.Printf("GRPC is running on port %s \n", configs.Config.GRPCPort)
+	listener, err := net.Listen("tcp", ":"+configs.Config.GRPCPort)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -12,8 +12,9 @@ import (
 )
 
 type Configs struct {
-	Env  string `json:"env"`
-	Port string `json:"port"`
+	Env      string `json:"env"`
+	AppPort  string `json:"app_port"`
+	GRPCPort string `json:"grpc_port"`
 
 	// Database connection info
 	DB ConnInfo `json:"db"`
@@ -77,8 +78,9 @@ func LoadConfigs() {
 	}
 
 	Config = Configs{
-		Env:  util.DefaultValueString("development", os.Getenv(constant.ENV)),
-		Port: util.DefaultValueString("8080", os.Getenv(constant.PORT)),
+		Env:      util.DefaultValueString("development", os.Getenv(constant.ENV)),
+		AppPort:  util.DefaultValueString("8080", os.Getenv(constant.APP_PORT)),
+		GRPCPort: util.DefaultValueString("8081", os.Getenv(constant.GRPC_PORT)),
 		DB: ConnInfo{
 			Host:        util.DefaultValueString("localhost", os.Getenv(constant.DB_HOST)),
 			Port:        util.DefaultValueString("5432", os.Getenv(constant.DB_PORT)),
