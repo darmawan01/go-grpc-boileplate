@@ -30,6 +30,11 @@ build-image:
 		-f build/Dockerfile\
 		-t go-grpc-boilerplate:v1 .
 
+protoc:
+	protoc --go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		services/grpc/**/*.proto
+
 run-image:
 	@docker run --rm\
 		--name go-grpc-boilerplate-test\
